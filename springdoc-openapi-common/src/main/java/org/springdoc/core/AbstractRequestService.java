@@ -644,11 +644,29 @@ public abstract class AbstractRequestService {
 		MethodParameter methodParameter = parameterInfo.getMethodParameter();
 		DelegatingMethodParameter delegatingMethodParameter = (DelegatingMethodParameter) methodParameter;
 
-		return (!RequestMethod.GET.equals(requestMethod) && (parameterInfo.getParameterModel() == null || parameterInfo.getParameterModel().getIn() == null) && !delegatingMethodParameter.isParameterObject())
-				&&
-				((methodParameter.getParameterAnnotation(io.swagger.v3.oas.annotations.parameters.RequestBody.class) != null
-						|| methodParameter.getParameterAnnotation(org.springframework.web.bind.annotation.RequestBody.class) != null)
-						|| (!ClassUtils.isPrimitiveOrWrapper(methodParameter.getParameter().getType()) && (!ArrayUtils.isEmpty(methodParameter.getParameterAnnotations()) || length == 1)));
+		return !RequestMethod.GET.equals(requestMethod) &&
+				isInSet(parameterInfo) &&
+				!delegatingMethodParameter.isParameterObject() &&
+				(
+						hasRequestBodyAnnotation(methodParameter) ||
+						(
+								!ClassUtils.isPrimitiveOrWrapper(methodParameter.getParameter().getType()) &&
+								(hasNoAnnotation(methodParameter) || length == 1)
+						)
+				);
+	}
+
+	private boolean hasNoAnnotation(MethodParameter methodParameter) {
+		return !ArrayUtils.isEmpty(methodParameter.getParameterAnnotations());
+	}
+
+	private boolean isInSet(ParameterInfo parameterInfo) {
+		return parameterInfo.getParameterModel() == null || parameterInfo.getParameterModel().getIn() == null;
+	}
+
+	private boolean hasRequestBodyAnnotation(MethodParameter methodParameter) {
+		return methodParameter.getParameterAnnotation(io.swagger.v3.oas.annotations.parameters.RequestBody.class) != null
+				|| methodParameter.getParameterAnnotation(org.springframework.web.bind.annotation.RequestBody.class) != null;
 	}
 
 }
